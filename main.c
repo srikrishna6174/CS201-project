@@ -6,7 +6,7 @@
 
 int main() {
     int n;
-    printf("Enter the number of days data is to be analysed : \n");
+    printf("Enter the number of days data is to be analyzed: \n");
     scanf("%d", &n);
 
     char date[n][11];
@@ -20,38 +20,39 @@ int main() {
     }
 
     int count = 0;
-    while (count < n && fscanf(file, "%10s %f %d", date[count], &price[count], &volume[count]) == 3){
-	    count++;
+    while (count < n && fscanf(file, "%10s %f %d", date[count], &price[count], &volume[count]) == 3) {
+        count++;
     }
-    
     fclose(file);
-        
+
+    if (count < n) {
+        fprintf(stderr, "Error: Only %d entries found in file, expected %d\n", count, n);
+        return EXIT_FAILURE;
+    }
+
     // Batch insert
-    batchInsert(date, price, n);
-    
-	NodeArray arr;
+    batchInsert(&root, date, price, n);
+
+    NodeArray arr;
     initNodeArray(&arr, 10); // Initial capacity of 10
     inOrder(root, &arr);
     printNodes(&arr);
-    
+
     // Plot the prices
     plotPrices(&arr);
-    
+
     // Clean up
     freeNodeArray(&arr);
 
-    //printf("Stock prices:\n");
-    //inOrder(root);
-
-    // Searching for a specific date
-    float search;
-    // Searching for a specific date
-    for (int i = 0;i<n;i++){
-    	char searchDate[11] ;
-	strcpy(searchDate, date[i]);
-	char earchDate[11] = "10/27/2010 "; 
-    	search = searchByDate(&root,earchDate);
-	printf("The price is %f on %10s\n",search,earchDate); 
+    // Searching for specific dates
+    for (int i = 0; i < n; i++) {
+        float search = searchByDate(&root, date[i]);
+        if (search != -1) {
+            printf("The price is %.2f on %s\n", search, date[i]);
+        } else {
+            printf("Date %s not found in the splay tree.\n", date[i]);
+        }
     }
+
     return 0;
 }

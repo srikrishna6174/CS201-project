@@ -20,7 +20,13 @@ extern struct Node* root;
 // Splay tree functions
 Node* splay(Node* root, char* date);
 Node* insert(Node* root, char* date, float price);
-void batchInsert(char dates[][11], float prices[], int size);
+
+// splay_tree.h
+
+// Other declarations...
+
+void batchInsert(Node** root, char dates[][11], float prices[], int size);
+
 //Stock* update_stock_price(Stock* root, char* symbol, float price);
 float searchByDate(Node** root, char* date);
 void printNodes(const NodeArray* arr);  // Helper function to display tree

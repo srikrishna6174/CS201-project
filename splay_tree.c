@@ -3,6 +3,8 @@
 #include <string.h>
 #include "splay_tree.h"
 
+#define NOT_FOUND_PRICE -1 // Define a constant for "not found" prices
+
 Node* root = NULL; // Initialize the root as NULL
 
 // Right rotation
@@ -31,21 +33,27 @@ Node* createNode(char* date, float price) {
     return newNode;
 }
 
-// This function is used to convert a date string to a number of days for comparison
+// Check if a year is a leap year
+int isLeapYear(int year) {
+    return (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0);
+}
+
+// This function converts a date string to the number of days for comparison
 int dateToDays(char* date) {
     int year, month, day;
     sscanf(date, "%d/%d/%d", &month, &day, &year);
 
-    // Calculate total days
-    int totalDays = year * 365 + year / 4 - year / 100 + year / 400; // Account for leap years
+    // Calculate total days up to the given year
+    int totalDays = year * 365 + year / 4 - year / 100 + year / 400;
 
-    // Days in months
+    // Days in each month
     int monthDays[] = {0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+    if (isLeapYear(year)) monthDays[2] = 29; // Adjust for leap year
+
     for (int i = 1; i < month; i++) {
         totalDays += monthDays[i];
     }
 
-    // Add days of the current month
     totalDays += day;
 
     return totalDays;
@@ -110,20 +118,20 @@ Node* insert(Node* root, char* date, float price) {
     if (dateToDays(date) < dateToDays(root->date)) {
         newNode->right = root;
         newNode->left = root->left;
-        root->left = NULL; // Root's left becomes NULL
+        root->left = NULL;
     } else {
         newNode->left = root;
         newNode->right = root->right;
-        root->right = NULL; // Root's right becomes NULL
+        root->right = NULL;
     }
 
-    return newNode; // New root
+    return newNode;
 }
 
 // Batch insert function
-void batchInsert(char dates[][11], float prices[], int size) {
+void batchInsert(Node** root, char dates[][11], float prices[], int size) {
     for (int i = 0; i < size; i++) {
-        root = insert(root, dates[i], prices[i]);
+        *root = insert(*root, dates[i], prices[i]);
     }
 }
 
@@ -131,17 +139,16 @@ void batchInsert(char dates[][11], float prices[], int size) {
 float searchByDate(Node** root, char* date) {
     if (*root == NULL) {
         printf("Invalid date: %s\n", date);
-        return -1; // or some other value to indicate "not found"
+        return NOT_FOUND_PRICE;
     }
 
-    *root = splay(*root, date); // Bring the target node to the root
+    *root = splay(*root, date);
 
-    // Use dateToDays to compare
     if (dateToDays((*root)->date) == dateToDays(date)) {
-        return (*root)->price; // Return the price if found
+        return (*root)->price;
     } else {
         printf("Invalid date: %s\n", date);
-        return -1; // or another value indicating "not found"
+        return NOT_FOUND_PRICE;
     }
 }
 
@@ -150,7 +157,7 @@ void initNodeArray(NodeArray* arr, size_t initialCapacity) {
     arr->nodes = malloc(initialCapacity * sizeof(Node*));
     if (arr->nodes == NULL) {
         fprintf(stderr, "Memory allocation failed for NodeArray\n");
-        exit(1); // Handle as needed
+        exit(1);
     }
     arr->size = 0;
     arr->capacity = initialCapacity;
@@ -167,14 +174,17 @@ void freeNodeArray(NodeArray* arr) {
 void inOrder(Node* root, NodeArray* arr) {
     if (root) {
         inOrder(root->left, arr);
-        
-        // Resize the array if needed
+
         if (arr->size == arr->capacity) {
+            Node** newNodes = realloc(arr->nodes, arr->capacity * 2 * sizeof(Node*));
+            if (newNodes == NULL) {
+                fprintf(stderr, "Reallocation failed for NodeArray\n");
+                exit(1);
+            }
+            arr->nodes = newNodes;
             arr->capacity *= 2;
-            arr->nodes = realloc(arr->nodes, arr->capacity * sizeof(Node*));
         }
-        
-        // Add the current node to the array
+
         arr->nodes[arr->size++] = root;
 
         inOrder(root->right, arr);
