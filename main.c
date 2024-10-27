@@ -5,6 +5,8 @@
 #include "plot.h"
 
 int main() {
+    printf("This code is the Splay Tree implementation for Optimized stock price retrieval and prediction.\n");
+    
     int n;
     printf("Enter the number of days data is to be analyzed: \n");
     scanf("%d", &n);
@@ -33,26 +35,66 @@ int main() {
     // Batch insert
     batchInsert(&root, date, price, n);
 
-    NodeArray arr;
-    initNodeArray(&arr, 10); // Initial capacity of 10
-    inOrder(root, &arr);
-    printNodes(&arr);
+    char choice;
+    do {
+        printf("Choose from the following functions: \n");
+        printf("Insertion : I \n");
+        printf("Deletion : D \n");
+        printf("Search : S \n");
+        printf("Date wise Inorder traversal : T \n");
+        printf("Predict : P \n");
+        printf("Quit : Q \n");
+        printf("Enter your choice: ");
+        scanf(" %c", &choice);  // Note the space before %c to consume any leftover newline
 
-    // Plot the prices
-    plotPrices(&arr);
-
-    // Clean up
-    freeNodeArray(&arr);
-
-    // Searching for specific dates
-    for (int i = 0; i < n; i++) {
-        float search = searchByDate(&root, date[i]);
-        if (search != -1) {
-            printf("The price is %.2f on %s\n", search, date[i]);
-        } else {
-            printf("Date %s not found in the splay tree.\n", date[i]);
+        switch (choice) {
+            case 'I':
+            case 'i':
+                // Handle insertion (you might want to prompt for new data here)
+                // Example: insert(&root, new_date, new_price, new_volume);
+                printf("Insertion function called.\n");
+                break;
+            case 'D':
+            case 'd':
+                // Handle deletion (you might want to prompt for a date to delete)
+                // Example: deleteByDate(&root, date_to_delete);
+                printf("Deletion function called.\n");
+                break;
+            case 'S':
+            case 's': {
+                char searchDate[11];
+                printf("Enter date to search (YYYY-MM-DD): ");
+                scanf("%10s", searchDate);
+                float searchPrice = searchByDate(&root, searchDate);
+                if (searchPrice != -1) {
+                    printf("The price is %.2f on %s\n", searchPrice, searchDate);
+                } else {
+                    printf("Date %s not found in the splay tree.\n", searchDate);
+                }
+                break;
+            }
+            case 'T':
+            case 't':
+                // Date wise Inorder traversal
+                NodeArray arr;
+                initNodeArray(&arr, 10); // Initial capacity of 10
+                inOrder(root, &arr);
+                printNodes(&arr);
+                freeNodeArray(&arr);
+                break;
+            case 'P':
+            case 'p':
+                // Call the prediction function
+                printf("Prediction function called.\n");
+                break;
+            case 'Q':
+            case 'q':
+                printf("Quitting the program.\n");
+                break;
+            default:
+                printf("Invalid choice. Please try again.\n");
         }
-    }
+    } while (choice != 'Q' && choice != 'q');
 
     return 0;
 }
