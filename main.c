@@ -7,34 +7,10 @@
 int main() {
     printf("This code is the Splay Tree implementation for Optimized stock price retrieval and prediction.\n");
     
-    int n;
-    printf("Enter the number of days data is to be analyzed: \n");
-    scanf("%d", &n);
-
-    char date[n][11];
-    float price[n];
-    int volume[n];
-
     FILE *file = fopen("Project.txt", "r");
-    if (!file) {
-        fprintf(stderr, "Error opening file\n");
-        return EXIT_FAILURE;
-    }
-
-    int count = 0;
-    while (count < n && fscanf(file, "%10s %f %d", date[count], &price[count], &volume[count]) == 3) {
-        count++;
-    }
-    fclose(file);
-
-    if (count < n) {
-        fprintf(stderr, "Error: Only %d entries found in file, expected %d\n", count, n);
-        return EXIT_FAILURE;
-    }
-
-    // Batch insert
-    batchInsert(&root, date, price, n);
-
+    int counts = 0;
+    
+    
     char choice;
     do {
         printf("Choose from the following functions: \n");
@@ -50,6 +26,57 @@ int main() {
         switch (choice) {
             case 'I':
             case 'i':
+                
+                char option;
+                do {
+                    printf("Do you want Insert Data Manually or Extract Data from the file Project.txt \n");
+                    printf("Manual Insertion : M \n");
+                    printf("Automatic Insertion : A \n");
+                    printf("Enter your choice: ");
+                    scanf(" %c", &option);  // Note the space before %c to consume any leftover newline
+                    switch (option){
+                        case 'A':
+                        case 'a':{
+                            int n;
+                            printf("Enter the number of day's data to be inserted \n");
+                            scanf("%d", &n);
+
+                            char date[n][11];
+                            float price[n];
+                            int volume[n];
+                            int count = 0;
+                            while (count < n && fscanf(file, "%10s %f %d", date[counts], &price[counts], &volume[counts]) == 3) {
+                                count++;
+                                counts++;
+                            }
+                            // Batch insert
+                            batchInsert(&root, date, price, n);
+                            break;
+                        }
+                        case 'M':
+                        case 'm':{
+                            int n;
+                            printf("Enter the number of day's data to be inserted \n");
+                            scanf("%d", &n);
+
+                            char date[n][11];
+                            float price[n];
+                            int volume[n];
+                            int count = 0;
+                            while (count < n && fscanf(file, "%10s %f %d", date[counts], &price[counts], &volume[counts]) == 3) {
+                                count++;
+                                counts++;
+                            }
+                            // Batch insert
+                            batchInsert(&root, date, price, n);
+                            break;
+                            
+                            
+                        }
+                        
+                        
+                    }
+                }
                 // Handle insertion (you might want to prompt for new data here)
                 // Example: insert(&root, new_date, new_price, new_volume);
                 printf("Insertion function called.\n");
@@ -95,6 +122,7 @@ int main() {
                 printf("Invalid choice. Please try again.\n");
         }
     } while (choice != 'Q' && choice != 'q');
+    fclose(file);
 
     return 0;
 }
