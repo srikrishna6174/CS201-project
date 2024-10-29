@@ -209,33 +209,46 @@ void printNodes(const NodeArray* arr) {
 }
 
 // Function to perform linear regression and predict the price for a future date
-float predictPrice(char dates[][11], float prices[], int size, char* futureDate) {
-    int *x = malloc(size * sizeof(int)); // Store dates as integers
-    float *y = prices;
+float predictPrice(NodeArray* nodeArray, char* futureDate) {
+    if (nodeArray->size == 0) {
+        return -1; // Handle empty NodeArray
+    }
 
-    // Convert dates to integers
-    for (int i = 0; i < size; i++) {
-        x[i] = dateToDays(dates[i]);
+    int* x = malloc(nodeArray->size * sizeof(int)); // Store dates as integers
+    float* y = malloc(nodeArray->size * sizeof(float)); // Store prices
+
+    // Convert dates to integers and extract prices
+    for (size_t i = 0; i < nodeArray->size; i++) {
+        x[i] = dateToDays(nodeArray->nodes[i]->date);
+        y[i] = nodeArray->nodes[i]->price;
     }
 
     // Linear regression calculations
     float sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0;
-    for (int i = 0; i < size; i++) {
+    for (size_t i = 0; i < nodeArray->size; i++) {
         sumX += x[i];
         sumY += y[i];
         sumXY += x[i] * y[i];
         sumX2 += x[i] * x[i];
     }
 
-    float slope = (size * sumXY - sumX * sumY) / (size * sumX2 - sumX * sumX);
-    float intercept = (sumY - slope * sumX) / size;
+    // Check for division by zero
+    if (size * sumX2 == sumX * sumX) {
+        free(x);
+        free(y);
+        return -1; // Handle edge case
+    }
 
-    // Convert the futudateToDaysre date to an integer
+    float slope = (nodeArray->size * sumXY - sumX * sumY) / (nodeArray->size * sumX2 - sumX * sumX);
+    float intercept = (sumY - slope * sumX) / nodeArray->size;
+
+    // Convert the future date to an integer
     int futureX = dateToDays(futureDate);
 
     // Predict price
     float predictedPrice = slope * futureX + intercept;
 
     free(x);
+    free(y);
     return predictedPrice;
 }
