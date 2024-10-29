@@ -69,7 +69,7 @@ int main() {
     printf("Enter the future date (MM/DD/YYYY) for prediction: ");
     scanf("%10s", futureDate);
     
-    float predictedPrice = predictPrice(&date[startIndex], &price[startIndex], n, futureDate);
+    float predictedPrice = predictPrice( arr,futureDate);
     printf("Predicted price for %s: %.2f\n", futureDate, predictedPrice);
 
     char v[11];
