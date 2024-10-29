@@ -39,31 +39,16 @@ int isLeapYear(int year) {
 }
 
 // This function converts a date string to the number of days for comparison
-// If an invalid date is provided  , the function returns -1.
 int dateToDays(char* date) {
     int year, month, day;
-    if (sscanf(date, "%d/%d/%d", &month, &day, &year) != 3) {
-        return -1; // Invalid format
-    }
-
-    // Check for valid month and day
-    if (month < 1 || month > 12 || day < 1 || day > 31) {
-        return -1; // Invalid month or day
-    }
-
-    // Days in each month
-    int monthDays[] = {0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
-    if (isLeapYear(year)) {
-        monthDays[2] = 29; // Adjust for leap year
-    }
-
-    // Check for valid day in the specific month
-    if (day > monthDays[month]) {
-        return -1; // Invalid day for the given month
-    }
+    sscanf(date, "%d/%d/%d", &month, &day, &year);
 
     // Calculate total days up to the given year
     int totalDays = year * 365 + year / 4 - year / 100 + year / 400;
+
+    // Days in each month
+    int monthDays[] = {0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+    if (isLeapYear(year)) monthDays[2] = 29; // Adjust for leap year
 
     for (int i = 1; i < month; i++) {
         totalDays += monthDays[i];
@@ -150,21 +135,31 @@ void batchInsert(Node** root, char dates[][11], float prices[], int size) {
     }
 }
 
-// Search by date
+// Recursive search function for the Splay Tree
+float recursiveSearch(Node* root, char* date) {
+    if (root == NULL) {
+        return NOT_FOUND_PRICE; // Base case: empty subtree
+    }
+    
+    // Compare dates (assuming dateToDays is implemented)
+    if (dateToDays(root->date) == dateToDays(date)) {
+        return root->price;  // Found the node with the matching date
+    }
+
+    // Recur on left or right subtree
+    float price = recursiveSearch(root->left, date);
+    if (price == NOT_FOUND_PRICE) {  // If not found in left subtree
+        price = recursiveSearch(root->right, date);  // Search in right subtree
+    }
+    return price;
+}
+
 float searchByDate(Node** root, char* date) {
-    if (*root == NULL) {
+    float price = recursiveSearch(*root, date);
+    if (price == NOT_FOUND_PRICE) {
         printf("Invalid date: %s\n", date);
-        return NOT_FOUND_PRICE;
     }
-
-    *root = splay(*root, date);
-
-    if (dateToDays((*root)->date) == dateToDays(date)) {
-        return (*root)->price;
-    } else {
-        printf("Invalid date: %s\n", date);
-        return NOT_FOUND_PRICE;
-    }
+    return price;
 }
 
 // Initialize a dynamic array of nodes
@@ -211,4 +206,36 @@ void printNodes(const NodeArray* arr) {
     for (size_t i = 0; i < arr->size; ++i) {
         printf("Date: %s, Price: %.2f\n", arr->nodes[i]->date, arr->nodes[i]->price);
     }
+}
+
+// Function to perform linear regression and predict the price for a future date
+float predictPrice(char dates[][11], float prices[], int size, char* futureDate) {
+    int *x = malloc(size * sizeof(int)); // Store dates as integers
+    float *y = prices;
+
+    // Convert dates to integers
+    for (int i = 0; i < size; i++) {
+        x[i] = dateToDays(dates[i]);
+    }
+
+    // Linear regression calculations
+    float sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0;
+    for (int i = 0; i < size; i++) {
+        sumX += x[i];
+        sumY += y[i];
+        sumXY += x[i] * y[i];
+        sumX2 += x[i] * x[i];
+    }
+
+    float slope = (size * sumXY - sumX * sumY) / (size * sumX2 - sumX * sumX);
+    float intercept = (sumY - slope * sumX) / size;
+
+    // Convert the futudateToDaysre date to an integer
+    int futureX = dateToDays(futureDate);
+
+    // Predict price
+    float predictedPrice = slope * futureX + intercept;
+
+    free(x);
+    return predictedPrice;
 }
