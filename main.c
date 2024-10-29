@@ -44,12 +44,13 @@ float predictPrice(char dates[][11], float prices[], int size, char* futureDate)
 
 int main() {
     int n;
-    printf("Enter the number of days data to analyze: ");
+    printf("Enter the number of latest days data to analyze: ");
     scanf("%d", &n);
 
-    char date[n][11];
-    float price[n];
-    int volume[n];
+    // Arrays to store date, price, and volume data
+    char date[1000][11];
+    float price[1000];
+    int volume[1000];
 
     FILE *file = fopen("Project.txt", "r");
     if (!file) {
@@ -57,20 +58,27 @@ int main() {
         return EXIT_FAILURE;
     }
 
-    int count = 0;
-    while (count < n && fscanf(file, "%10s %f %d", date[count], &price[count], &volume[count]) == 3) {
-        count++;
+    // Read all entries from the file
+    int totalCount = 0;
+    while (fscanf(file, "%10s %f %d", date[totalCount], &price[totalCount], &volume[totalCount]) == 3) {
+        totalCount++;
+        if (totalCount >= 1000) break;  // Prevent exceeding array bounds
     }
     fclose(file);
 
-    if (count < n) {
-        fprintf(stderr, "Error: Only %d entries found in file, expected %d\n", count, n);
-        return EXIT_FAILURE;
+    // Adjust `n` if more data is requested than available
+    if (n > totalCount) {
+        fprintf(stderr, "Only %d entries available, adjusting `n` to %d.\n", totalCount, totalCount);
+        n = totalCount;
     }
 
-    // Batch insert
-    batchInsert(&root, date, price, n);
+    // Calculate start index to use only the last `n` entries
+    int startIndex = totalCount - n;
 
+    // Batch insert only the last `n` entries
+    batchInsert(&root, &date[startIndex], &price[startIndex], n);
+
+    // Prepare NodeArray for in-order traversal
     NodeArray arr;
     initNodeArray(&arr, 10); // Initial capacity of 10
     inOrder(root, &arr);
@@ -82,8 +90,8 @@ int main() {
     // Clean up
     freeNodeArray(&arr);
 
-    // Searching for specific dates
-    for (int i = 0; i < n; i++) {
+    // Searching for specific dates in the last `n` entries
+    for (int i = startIndex; i < totalCount; i++) {
         float search = searchByDate(&root, date[i]);
         if (search != -1) {
             printf("The price is %.2f on %s\n", search, date[i]);
@@ -92,12 +100,12 @@ int main() {
         }
     }
 
-    // Prediction for a future date
+    // Get future date from user and predict price
     char futureDate[11];
     printf("Enter the future date (MM/DD/YYYY) for prediction: ");
     scanf("%10s", futureDate);
-
-    float predictedPrice = predictPrice(date, price, n, futureDate);
+    
+    float predictedPrice = predictPrice(&date[startIndex], &price[startIndex], n, futureDate);
     printf("Predicted price for %s: %.2f\n", futureDate, predictedPrice);
 
     return 0;
