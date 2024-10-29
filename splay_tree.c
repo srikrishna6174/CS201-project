@@ -39,16 +39,31 @@ int isLeapYear(int year) {
 }
 
 // This function converts a date string to the number of days for comparison
+// If an invalid date is provided  , the function returns -1.
 int dateToDays(char* date) {
     int year, month, day;
-    sscanf(date, "%d/%d/%d", &month, &day, &year);
+    if (sscanf(date, "%d/%d/%d", &month, &day, &year) != 3) {
+        return -1; // Invalid format
+    }
 
-    // Calculate total days up to the given year
-    int totalDays = year * 365 + year / 4 - year / 100 + year / 400;
+    // Check for valid month and day
+    if (month < 1 || month > 12 || day < 1 || day > 31) {
+        return -1; // Invalid month or day
+    }
 
     // Days in each month
     int monthDays[] = {0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
-    if (isLeapYear(year)) monthDays[2] = 29; // Adjust for leap year
+    if (isLeapYear(year)) {
+        monthDays[2] = 29; // Adjust for leap year
+    }
+
+    // Check for valid day in the specific month
+    if (day > monthDays[month]) {
+        return -1; // Invalid day for the given month
+    }
+
+    // Calculate total days up to the given year
+    int totalDays = year * 365 + year / 4 - year / 100 + year / 400;
 
     for (int i = 1; i < month; i++) {
         totalDays += monthDays[i];
