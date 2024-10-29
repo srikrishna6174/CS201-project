@@ -33,5 +33,5 @@ void printNodes(const NodeArray* arr);  // Helper function to display tree
 void initNodeArray(NodeArray* arr, size_t initialCapacity);
 void freeNodeArray(NodeArray* arr);
 void inOrder(Node* root, NodeArray* arr);
-float predictPrice(char dates[][11], float prices[], int size, char* futureDate);
+float predictPrice(NodeArray* nodeArray, char* futureDate) ;
 #endif
