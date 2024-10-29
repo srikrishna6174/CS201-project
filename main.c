@@ -11,9 +11,9 @@ int main() {
     scanf("%d", &n);
 
     // Arrays to store date, price, and volume data
-    char date[1000][11];
-    float price[1000];
-    int volume[1000];
+    char date[n][11];
+    float price[n];
+    int volume[n];
 
     FILE *file = fopen("Project.txt", "r");
     if (!file) {
@@ -25,21 +25,21 @@ int main() {
     int totalCount = 0;
     while (fscanf(file, "%10s %f %d", date[totalCount], &price[totalCount], &volume[totalCount]) == 3) {
         totalCount++;
-        if (totalCount >= 1000) break;  // Prevent exceeding array bounds
+        if (totalCount >= n) break;  // Prevent exceeding array bounds
     }
     fclose(file);
 
     // Adjust `n` if more data is requested than available
-    if (n > totalCount) {
+    /*if (n > totalCount) {
         fprintf(stderr, "Only %d entries available, adjusting `n` to %d.\n", totalCount, totalCount);
         n = totalCount;
-    }
+    }*/
 
     // Calculate start index to use only the last `n` entries
-    int startIndex = totalCount - n;
+    //int startIndex = totalCount - n;
 
     // Batch insert only the last `n` entries
-    batchInsert(&root, &date[startIndex], &price[startIndex], n);
+    batchInsert(&root, date, price, n);
 
     // Prepare NodeArray for in-order traversal
     NodeArray arr;
@@ -47,14 +47,14 @@ int main() {
     inOrder(root, &arr);
     
     // Plot the prices
-    plotPrices(&arr);
+    plotPrices(date,price,n-1);
 
     printNodes(&arr);
 
     // Clean up
     freeNodeArray(&arr);
-
-    // Searching for specific dates in the last `n` entries
+/*
+    // Searching for speci12fic dates in the last `n` entries
     for (int i = startIndex; i < totalCount; i++) {
         float search = searchByDate(&root, date[i]);
         if (search != -1) {
@@ -63,14 +63,6 @@ int main() {
             printf("Date %s not found in the splay tree.\n", date[i]);
         }
     }
-
-    // Get future date from user and predict price
-    char futureDate[11];
-    printf("Enter the future date (MM/DD/YYYY) for prediction: ");
-    scanf("%10s", futureDate);
-    
-    float predictedPrice = predictPrice(&date[startIndex], &price[startIndex], n, futureDate);
-    printf("Predicted price for %s: %.2f\n", futureDate, predictedPrice);
 
     char v[11];
     printf("Enter the date (MM/DD/YYYY) for search: ");
@@ -82,5 +74,14 @@ int main() {
         printf("Date %s not found in the splay tree.\n", v);
     }
 
+    // Get future date from user and predict price
+    char futureDate[11];
+    printf("Enter the future date (MM/DD/YYYY) for prediction: ");
+    scanf("%10s", futureDate);
+    
+    float predictedPrice = predictPrice(&arr,futureDate);
+    printf("Predicted price for %s: %.2f\n", futureDate, predictedPrice);
+
+*/
     return 0;
 }
