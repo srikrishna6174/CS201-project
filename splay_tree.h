@@ -25,13 +25,14 @@ Node* insert(Node* root, char* date, float price);
 
 // Other declarations...
 
+int dateToDays(char* date);
 void batchInsert(Node** root, char dates[][11], float prices[], int size);
-
 //Stock* update_stock_price(Stock* root, char* symbol, float price);
+
 float searchByDate(Node** root, char* date);
 void printNodes(const NodeArray* arr);  // Helper function to display tree
 void initNodeArray(NodeArray* arr, size_t initialCapacity);
 void freeNodeArray(NodeArray* arr);
 void inOrder(Node* root, NodeArray* arr);
-float predictPrice(char dates[][11], float prices[], int size, char* futureDate);
+float predictPrice(NodeArray* nodeArray, char* futureDate) ;
 #endif
