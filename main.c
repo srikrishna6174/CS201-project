@@ -40,6 +40,28 @@ int main() {
 
     // Batch insert only the last `n` entries
     batchInsert(&root, date, price, n);
+    /*int sx = 0;
+    float sy = 0;
+    int sxx = 0;
+    float sxy = 0;
+    int diff = dateToDays(date[0]);
+
+    for (int i = 0; i < n; i++) {
+        int x_value = dateToDays(date[i]) - diff + 1; // X value after transformation
+        sx += x_value;
+        sy += price[i];
+        sxx += (x_value * x_value);      // Square of x_value
+        sxy += (x_value * price[i]);     // x_value * corresponding y_value (price)
+    }
+
+    printf("sx = %d\n", sx);
+    printf("sy = %f\n", sy);
+    printf("sxx = %d\n", sxx);
+    printf("sxy = %f\n", sxy);
+    float slope = ((n * sxy) - (sx * sy)) / ((n * sxx) - (sx * sx));
+    printf("Slope = %f\n", slope);
+    */
+
 
     // Prepare NodeArray for in-order traversal
     NodeArray arr;
@@ -47,13 +69,13 @@ int main() {
     inOrder(root, &arr);
     
     // Plot the prices
-    plotPrices(date,price,n-1);
+    //plotPrices(date,price,n-1);
 
     printNodes(&arr);
 
     // Clean up
-    freeNodeArray(&arr);
-/*
+   
+    /*
     // Searching for speci12fic dates in the last `n` entries
     for (int i = startIndex; i < totalCount; i++) {
         float search = searchByDate(&root, date[i]);
@@ -74,14 +96,14 @@ int main() {
         printf("Date %s not found in the splay tree.\n", v);
     }
 
-    // Get future date from user and predict price
+     Get future date from user and predict price*/
     char futureDate[11];
     printf("Enter the future date (MM/DD/YYYY) for prediction: ");
     scanf("%10s", futureDate);
     
     float predictedPrice = predictPrice(&arr,futureDate);
     printf("Predicted price for %s: %.2f\n", futureDate, predictedPrice);
+    freeNodeArray(&arr);
 
-*/
     return 0;
 }
