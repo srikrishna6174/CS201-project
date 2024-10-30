@@ -62,11 +62,14 @@ int main() {
                             char date[n][11];
                             float price[n];
                             int volume[n];
-                            int count = 0;
-                            while (count < n && fscanf(file, "%10s %f %d", date[counts], &price[counts], &volume[counts]) == 3) {
-                                count++;
-                                counts++;
+                            
+                            for (int i = 0;i<n;i++){
+                                scanf("%10s", &date[counts]);
+                                scanf("%f", &price[counts]);
+                                scanf("%d", &volume[counts]);
+                                counts++
                             }
+                            
                             // Batch insert
                             batchInsert(&root, date, price, n);
                             break;
@@ -79,7 +82,7 @@ int main() {
                 }
                 // Handle insertion (you might want to prompt for new data here)
                 // Example: insert(&root, new_date, new_price, new_volume);
-                printf("Insertion function called.\n");
+                
                 break;
             case 'D':
             case 'd':
@@ -90,7 +93,7 @@ int main() {
             case 'S':
             case 's': {
                 char searchDate[11];
-                printf("Enter date to search (YYYY-MM-DD): ");
+                printf("Enter date to search (MM/DD/YYYY): ");
                 scanf("%10s", searchDate);
                 float searchPrice = searchByDate(&root, searchDate);
                 if (searchPrice != -1) {
@@ -111,6 +114,10 @@ int main() {
                 break;
             case 'P':
             case 'p':
+                char searchDate[11];
+                printf("Enter the date  (MM/DD/YYYY): ");
+                scanf("%10s", searchDate);
+                
                 // Call the prediction function
                 printf("Prediction function called.\n");
                 break;
