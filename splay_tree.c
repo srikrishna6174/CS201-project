@@ -41,28 +41,14 @@ int isLeapYear(int year) {
 // This function converts a date string to the number of days for comparison
 int dateToDays(char* date) {
     int year, month, day;
-    if (sscanf(date, "%d/%d/%d", &month, &day, &year) != 3) {
-        return -1; // Invalid format
-    }
-
-    // Check for valid month and day
-    if (month < 1 || month > 12 || day < 1 || day > 31) {
-        return -1; // Invalid month or day
-    }
-
-    // Days in each month
-    int monthDays[] = {0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
-    if (isLeapYear(year)) {
-        monthDays[2] = 29; // Adjust for leap year
-    }
-
-    // Check for valid day in the specific month
-    if (day > monthDays[month]) {
-        return -1; // Invalid day for the given month
-    }
+    sscanf(date, "%d/%d/%d", &month, &day, &year);
 
     // Calculate total days up to the given year
     int totalDays = year * 365 + year / 4 - year / 100 + year / 400;
+
+    // Days in each month
+    int monthDays[] = {0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+    if (isLeapYear(year)) monthDays[2] = 29; // Adjust for leap year
 
     for (int i = 1; i < month; i++) {
         totalDays += monthDays[i];
@@ -72,7 +58,6 @@ int dateToDays(char* date) {
 
     return totalDays;
 }
-
 
 // Splay operation
 Node* splay(Node* root, char* date) {
@@ -224,33 +209,60 @@ void printNodes(const NodeArray* arr) {
 }
 
 // Function to perform linear regression and predict the price for a future date
-float predictPrice(char dates[][11], float prices[], int size, char* futureDate) {
-    int *x = malloc(size * sizeof(int)); // Store dates as integers
-    float *y = prices;
-
-    // Convert dates to integers
-    for (int i = 0; i < size; i++) {
-        x[i] = dateToDays(dates[i]);
+float predictPrice(NodeArray* nodeArray, char* futureDate) {
+    if (nodeArray == NULL || nodeArray->size == 0) {
+        return -1; // Handle empty or NULL NodeArray
     }
 
-    // Linear regression calculations
-    float sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0;
-    for (int i = 0; i < size; i++) {
-        sumX += x[i];
-        sumY += y[i];
-        sumXY += x[i] * y[i];
-        sumX2 += x[i] * x[i];
+    int* x = malloc(nodeArray->size * sizeof(int)); // Store dates as integers
+    float* y = malloc(nodeArray->size * sizeof(float)); // Store prices
+
+    if (x == NULL || y == NULL) {
+        free(x);
+        free(y);
+        return -1; // Handle memory allocation failure
     }
 
-    float slope = (size * sumXY - sumX * sumY) / (size * sumX2 - sumX * sumX);
-    float intercept = (sumY - slope * sumX) / size;
+    // Convert dates to integers and extract prices
+    for (size_t i = 0; i < nodeArray->size; i++) {
+        if (nodeArray->nodes[i] == NULL) {
+            printf("Error: Node at index %zu is NULL\n", i);
+            free(x);
+            free(y);
+            return -1;
+        }
+        x[i] = dateToDays(nodeArray->nodes[i]->date);
+        y[i] = nodeArray->nodes[i]->price;
+    }
 
-    // Convert the futudateToDaysre date to an integer
-    int futureX = dateToDays(futureDate);
+    int sx = 0;
+    float sy = 0;
+    int sxx = 0;
+    float sxy = 0;
+    int diff = x[0];
 
-    // Predict price
-    float predictedPrice = slope * futureX + intercept;
+    for (int i = 0; i < nodeArray->size; i++) {
+        int x_value = x[i] - diff + 1; // X value after transformation
+        sx += x_value;
+        sy += y[i];
+        sxx += (x_value * x_value);      // Square of x_value
+        sxy += (x_value * y[i]);         // x_value * corresponding y_value (price)
+    }
+
+    
+
+    float denominator = (nodeArray->size * sxx) - (sx * sx);
+    if (denominator == 0) {
+        printf("Error: Division by zero in slope calculation.\n");
+        free(x);
+        free(y);
+        return -1;
+    }
+    float slope = ((nodeArray->size * sxy) - (sx * sy)) / denominator;
+    float intercept = (sy-(slope*sx))/(nodeArray->size);
+    float prediction = (slope*(dateToDays(futureDate)-diff+1)) + intercept;
 
     free(x);
-    return predictedPrice;
+    free(y);
+    return prediction;
 }
