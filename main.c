@@ -1,108 +1,202 @@
-//1
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include "splay_tree.h"
 #include "plot.h"
 
 int main() {
-    int n;
-    printf("Enter the number of latest days data to analyze: ");
-    scanf("%d", &n);
-
-    // Arrays to store date, price, and volume data
-    char date[n][11];
-    float price[n];
-    int volume[n];
-
+    printf("This code is the Splay Tree implementation for optimized stock price retrieval and prediction.\n");
+    
     FILE *file = fopen("Project.txt", "r");
     if (!file) {
-        fprintf(stderr, "Error opening file\n");
-        return EXIT_FAILURE;
+        fprintf(stderr, "Error opening file Project.txt\n");
+        return 1;
     }
-
-    // Read all entries from the file
-    int totalCount = 0;
-    while (fscanf(file, "%10s %f %d", date[totalCount], &price[totalCount], &volume[totalCount]) == 3) {
-        totalCount++;
-        if (totalCount >= n) break;  // Prevent exceeding array bounds
-    }
-    fclose(file);
-
-    // Adjust `n` if more data is requested than available
-    /*if (n > totalCount) {
-        fprintf(stderr, "Only %d entries available, adjusting `n` to %d.\n", totalCount, totalCount);
-        n = totalCount;
-    }*/
-
-    // Calculate start index to use only the last `n` entries
-    //int startIndex = totalCount - n;
-
-    // Batch insert only the last `n` entries
-    batchInsert(&root, date, price, n);
-    /*int sx = 0;
-    float sy = 0;
-    int sxx = 0;
-    float sxy = 0;
-    int diff = dateToDays(date[0]);
-
-    for (int i = 0; i < n; i++) {
-        int x_value = dateToDays(date[i]) - diff + 1; // X value after transformation
-        sx += x_value;
-        sy += price[i];
-        sxx += (x_value * x_value);      // Square of x_value
-        sxy += (x_value * price[i]);     // x_value * corresponding y_value (price)
-    }
-
-    printf("sx = %d\n", sx);
-    printf("sy = %f\n", sy);
-    printf("sxx = %d\n", sxx);
-    printf("sxy = %f\n", sxy);
-    float slope = ((n * sxy) - (sx * sy)) / ((n * sxx) - (sx * sx));
-    printf("Slope = %f\n", slope);
-    */
-
-
-    // Prepare NodeArray for in-order traversal
     NodeArray arr;
-    initNodeArray(&arr, 10); // Initial capacity of 10
-    inOrder(root, &arr);
+    initNodeArray(&arr, 10);
+    int counts = 0;
     
-    // Plot the prices
-    //plotPrices(date,price,n-1);
+    char choice;
+    do {
+        printf("Choose from the following functions: \n");
+        printf("Insertion : I \n");
+        printf("Plot Graph : G \n");
+        printf("Search : S \n");
+        printf("Date-wise Inorder traversal : T \n");
+        printf("Predict : P \n");
+        printf("Quit : Q \n");
+        printf("Enter your choice: ");
+        scanf(" %c", &choice);  // Note the space before %c to consume any leftover newline
 
-    printNodes(&arr);
+        switch (choice) {
+            case 'I':
+            case 'i': {
+                char option;
+                do {
+                    printf("Do you want to insert data manually or extract data from the file Project.txt?\n");
+                    printf("Manual Insertion : M \n");
+                    printf("Automatic Insertion : A \n");
+                    printf("Enter your choice: ");
+                    scanf(" %c", &option);  // Note the space before %c to consume any leftover newline
+                    switch (option) {
+                        case 'A':
+                        case 'a': {
+                            int n;
+                            printf("Enter the number of day's data to be inserted: ");
+                            scanf("%d", &n);
 
-    // Clean up
-   
-    /*
-    // Searching for speci12fic dates in the last `n` entries
-    for (int i = startIndex; i < totalCount; i++) {
-        float search = searchByDate(&root, date[i]);
-        if (search != -1) {
-            printf("The price is %.2f on %s\n", search, date[i]);
-        } else {
-            printf("Date %s not found in the splay tree.\n", date[i]);
+                            // Declare arrays dynamically to avoid fixed size issues
+                            char (*date)[11] = malloc(n * sizeof(char[11]));
+                            float *price = malloc(n * sizeof(float));
+                            int *volume = malloc(n * sizeof(int));
+
+                            if (!date || !price || !volume) {
+                                fprintf(stderr, "Memory allocation failed.\n");
+                                return 1;
+                            }
+
+                            int count = 0;
+                            while (count < n && fscanf(file, "%10s %f %d", date[count], &price[count], &volume[count]) == 3) {
+                                count++;
+                                counts++;
+                            }
+
+                            // Batch insert
+                            batchInsert(&root, date, price, count);
+
+                            // Free allocated memory for temporary arrays
+                            free(date);
+                            free(price);
+                            free(volume);
+
+                            break;
+                        }
+                        case 'M':
+                        case 'm': {
+                            int n;
+                            printf("Enter the number of day's data to be inserted: ");
+                            scanf("%d", &n);
+
+                            char (*date)[11] = malloc(n * sizeof(char[11]));
+                            float *price = malloc(n * sizeof(float));
+                            int *volume = malloc(n * sizeof(int));
+
+                            if (!date || !price || !volume) {
+                                fprintf(stderr, "Memory allocation failed.\n");
+                                return 1;
+                            }
+
+                            for (int i = 0; i < n; i++) {
+                                printf("Enter date (MM/DD/YYYY): ");
+                                scanf("%10s", date[i]);
+                                printf("Enter price: ");
+                                scanf("%f", &price[i]);
+                                printf("Enter volume of stock traded: ");
+                                scanf("%d", &volume[i]); // Use %d for integers
+
+                                // Insert each entry one by one instead of in a batch
+                                //insert(root, date[i], price[i]);
+                            }
+                            batchInsert(&root, date, price, n);
+
+                            counts += n;
+
+                            // Free allocated memory for temporary arrays
+                            free(date);
+                            free(price);
+                            free(volume);
+
+                            break;
+                        }
+                        default:
+                            printf("Invalid option for insertion. Please try again.\n");
+                            break;
+                    }
+                } while (option != 'A' && option != 'a' && option != 'M' && option != 'm');
+                break;
+            }
+            case 'G':
+            case 'g': {
+                char option;
+                do {
+                    printf("Do you want to plot Prices or Volume of Stocks over time?\n");
+                    printf("Prices : P\n");
+                    printf("Volume : V\n");
+                    printf("Enter your choice: ");
+                    scanf(" %c", &option);  // Note the space before %c to consume any leftover newline
+
+                    switch (option) {
+                    case 'P':
+                    case 'p': {
+                        plotPrices(&arr);  // Call plotPrices function
+                        printf("Plotting Prices over time.\n");
+                        break;
+                    }
+            case 'V':
+            case 'v': {
+                // Add function call to plot Volume if implemented
+                printf("Plotting Volume over time (to be implemented).\n");
+                break;
+            }
+            default:
+                printf("Invalid choice. Please enter P or V.\n");
+                break;
+            }
+            } while (option != 'P' && option != 'p' && option != 'V' && option != 'v');  // Loop until valid option
+
+            printf("Plotting function called.\n");
+            break;
+            }   
+            case 'S':
+            case 's': {
+                char searchDate[11];
+                printf("Enter date to search (MM/DD/YYYY): ");
+                scanf("%10s", searchDate);
+                clock_t start = clock();
+                float searchPrice = searchByDate(&root, searchDate);
+                if (searchPrice != -1) {
+                    printf("The price is %.2f on %s\n", searchPrice, searchDate);
+                } else {
+                    printf("Date %s not found in the splay tree.\n", searchDate);
+                }
+                // Record the end time
+                clock_t end = clock();
+
+                // Calculate the elapsed time in seconds
+                double time_taken = (double)(end - start) / CLOCKS_PER_SEC;
+                printf("myFunction() took %f seconds to execute.\n", time_taken);
+                break;
+            }
+            case 'T':
+            case 't':
+                // Date-wise Inorder traversal
+                freeNodeArray(&arr);
+                initNodeArray(&arr, 10); // Reinitialize array after freeing it
+                
+                inOrder(root, &arr);
+                
+                printNodes(&arr);
+                break;
+            case 'P':
+            case 'p': {
+                char futureDate[11];
+                printf("Enter the date (MM/DD/YYYY) for prediction: ");
+                scanf("%10s", futureDate);
+                float predictedPrice = predictPrice(&arr, futureDate);
+                printf("Predicted price for %s: %.2f\n", futureDate, predictedPrice);
+                break;
+            }
+            case 'Q':
+            case 'q':
+                printf("Quitting the program.\n");
+                break;
+            default:
+                printf("Invalid choice. Please try again.\n");
         }
-    }
+    } while (choice != 'Q' && choice != 'q');
 
-    char v[11];
-    printf("Enter the date (MM/DD/YYYY) for search: ");
-    scanf("%10s",&v);
-    float search = searchByDate(&root, v);
-    if (search != -1) {
-        printf("The price is %.2f on %s\n", search, v);
-    } else {
-        printf("Date %s not found in the splay tree.\n", v);
-    }
-
-     Get future date from user and predict price*/
-    char futureDate[11];
-    printf("Enter the future date (MM/DD/YYYY) for prediction: ");
-    scanf("%10s", futureDate);
-    
-    float predictedPrice = predictPrice(&arr,futureDate);
-    printf("Predicted price for %s: %.2f\n", futureDate, predictedPrice);
+    fclose(file);
     freeNodeArray(&arr);
 
     return 0;
