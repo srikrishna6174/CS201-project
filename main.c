@@ -9,6 +9,8 @@ int main() {
     
     FILE *file = fopen("Project.txt", "r");
     int counts = 0;
+    NodeArray arr;
+    initNodeArray(&arr, 10);
     
     
     char choice;
@@ -106,17 +108,18 @@ int main() {
             case 'T':
             case 't':
                 // Date wise Inorder traversal
-                NodeArray arr;
-                initNodeArray(&arr, 10); // Initial capacity of 10
+                 // Initial capacity of 10
                 inOrder(root, &arr);
                 printNodes(&arr);
-                freeNodeArray(&arr);
+                
                 break;
             case 'P':
             case 'p':
-                char searchDate[11];
+                char futureDate[11];
                 printf("Enter the date  (MM/DD/YYYY): ");
-                scanf("%10s", searchDate);
+                scanf("%10s", futureDate);
+                float predictedPrice = predictPrice(&arr,futureDate);
+                printf("Predicted price for %s: %.2f\n", futureDate, predictedPrice);
                 
                 // Call the prediction function
                 printf("Prediction function called.\n");
@@ -124,12 +127,14 @@ int main() {
             case 'Q':
             case 'q':
                 printf("Quitting the program.\n");
+                
                 break;
             default:
                 printf("Invalid choice. Please try again.\n");
         }
     } while (choice != 'Q' && choice != 'q');
     fclose(file);
+    freeNodeArray(&arr);
 
     return 0;
 }
