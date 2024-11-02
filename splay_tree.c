@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 #include "splay_tree.h"
 
 #define NOT_FOUND_PRICE -1 // Define a constant for "not found" prices
@@ -24,11 +25,12 @@ Node* leftRotate(Node* x) {
 }
 
 // Function to create a new node
-Node* createNode(char* date, float price) {
+Node* createNode(char* date, float price, int volume) {
     Node* newNode = (Node*)malloc(sizeof(Node));
     if (!newNode) return NULL; // Check for allocation failure
     strcpy(newNode->date, date);
     newNode->price = price;
+    newNode->volume = volume;
     newNode->left = newNode->right = NULL;
     return newNode;
 }
@@ -42,14 +44,29 @@ int isLeapYear(int year) {
 int dateToDays(char* date) {
     int year, month, day;
     sscanf(date, "%d/%d/%d", &month, &day, &year);
+    if (sscanf(date, "%d/%d/%d", &month, &day, &year) != 3) {
+        return -1; // Invalid format
+    }
 
     // Calculate total days up to the given year
     int totalDays = year * 365 + year / 4 - year / 100 + year / 400;
+    // Check for valid month and day
+    if (month < 1 || month > 12 || day < 1 || day > 31) {
+        return -1; // Invalid month or day
+    }
 
     // Days in each month
     int monthDays[] = {0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
     if (isLeapYear(year)) monthDays[2] = 29; // Adjust for leap year
-
+    if (isLeapYear(year)) {
+        monthDays[2] = 29; // Adjust for leap year
+    }
+    // Check for valid day in the specific month
+    if (day > monthDays[month]) {
+        return -1; // Invalid day for the given month
+    }
+    // Calculate total days up to the given year
+    
     for (int i = 1; i < month; i++) {
         totalDays += monthDays[i];
     }
@@ -101,18 +118,19 @@ Node* splay(Node* root, char* date) {
 }
 
 // Insert a new node
-Node* insert(Node* root, char* date, float price) {
-    if (root == NULL) return createNode(date, price);
+Node* insert(Node* root, char* date, float price, int volume) {
+    if (root == NULL) return createNode(date, price, volume);
 
     root = splay(root, date);
 
     if (dateToDays(date) == dateToDays(root->date)) {
         // If the date already exists, update the price
         root->price = price;
+        root->volume = volume;
         return root;
     }
 
-    Node* newNode = createNode(date, price);
+    Node* newNode = createNode(date, price, volume);
     if (!newNode) return NULL; // Check for allocation failure
 
     if (dateToDays(date) < dateToDays(root->date)) {
@@ -129,9 +147,9 @@ Node* insert(Node* root, char* date, float price) {
 }
 
 // Batch insert function
-void batchInsert(Node** root, char dates[][11], float prices[], int size) {
+void batchInsert(Node** root, char dates[][11], float prices[], int volume[], int size) {
     for (int i = 0; i < size; i++) {
-        *root = insert(*root, dates[i], prices[i]);
+        *root = insert(*root, dates[i], prices[i], volume[i]);
     }
 }
 
@@ -204,65 +222,94 @@ void inOrder(Node* root, NodeArray* arr) {
 // Print all nodes in the NodeArray
 void printNodes(const NodeArray* arr) {
     for (size_t i = 0; i < arr->size; ++i) {
-        printf("Date: %s, Price: %.2f\n", arr->nodes[i]->date, arr->nodes[i]->price);
+        printf("Date: %s, Price: %.2f, Volume: %d\n", arr->nodes[i]->date, arr->nodes[i]->price, arr->nodes[i]->volume);
     }
 }
 
 // Function to perform linear regression and predict the price for a future date
 float predictPrice(NodeArray* nodeArray, char* futureDate) {
     if (nodeArray == NULL || nodeArray->size == 0) {
-        return -1; // Handle empty or NULL NodeArray
+        return NAN; // Return NaN for empty or NULL NodeArray
     }
 
     int* x = malloc(nodeArray->size * sizeof(int)); // Store dates as integers
-    float* y = malloc(nodeArray->size * sizeof(float)); // Store prices
+    double* y = malloc(nodeArray->size * sizeof(double)); // Use double for precision in prices
 
     if (x == NULL || y == NULL) {
         free(x);
         free(y);
-        return -1; // Handle memory allocation failure
+        return NAN; // Return NaN for memory allocation failure
     }
 
-    // Convert dates to integers and extract prices
+    // Convert dates to integer days and extract prices
     for (size_t i = 0; i < nodeArray->size; i++) {
         if (nodeArray->nodes[i] == NULL) {
             printf("Error: Node at index %zu is NULL\n", i);
             free(x);
             free(y);
-            return -1;
+            return NAN;
         }
         x[i] = dateToDays(nodeArray->nodes[i]->date);
         y[i] = nodeArray->nodes[i]->price;
     }
 
-    int sx = 0;
-    float sy = 0;
-    int sxx = 0;
-    float sxy = 0;
-    int diff = x[0];
+    // Initialize variables for summation in linear regression
+    long long int sx = 0, sxx = 0;
+    double sy = 0, sxy = 0;
+    int diff = x[0];  // Shift x values to start from x[0]
 
-    for (int i = 0; i < nodeArray->size; i++) {
-        int x_value = x[i] - diff + 1; // X value after transformation
+    for (size_t i = 0; i < nodeArray->size; i++) {
+        int x_value = x[i] - diff + 1; // Adjusted x value for each point
         sx += x_value;
         sy += y[i];
-        sxx += (x_value * x_value);      // Square of x_value
-        sxy += (x_value * y[i]);         // x_value * corresponding y_value (price)
+        sxx += x_value * x_value;
+        sxy += x_value * y[i];
     }
 
-    
-
-    float denominator = (nodeArray->size * sxx) - (sx * sx);
-    if (denominator == 0) {
-        printf("Error: Division by zero in slope calculation.\n");
+    // Calculate slope and intercept for linear regression
+    double denominator = (nodeArray->size * sxx) - (sx * sx);
+    if (fabs(denominator) < 1e-6) {  // Check if denominator is too close to zero
+        printf("Error: Division by near-zero in slope calculation.\n");
         free(x);
         free(y);
-        return -1;
+        return NAN;
     }
-    float slope = ((nodeArray->size * sxy) - (sx * sy)) / denominator;
-    float intercept = (sy-(slope*sx))/(nodeArray->size);
-    float prediction = (slope*(dateToDays(futureDate)-diff+1)) + intercept;
+    
+    double slope = ((nodeArray->size * sxy) - (sx * sy)) / denominator;
+    double intercept = (sy - (slope * sx)) / nodeArray->size;
+    
+    // Calculate prediction
+    double futureX = dateToDays(futureDate) - diff + 1;
+    double prediction = (slope * futureX) + intercept;
 
+    // Clean up
     free(x);
     free(y);
     return prediction;
+}
+
+double calculateMSE(NodeArray* nodeArray) {
+    if (nodeArray == NULL || nodeArray->size == 0) {
+        return NAN; // Return NaN to indicate an error for empty or NULL NodeArray
+    }
+
+    double mse = 0.0;
+    for (size_t i = 0; i < nodeArray->size; i++) {
+        // Predict the price for each date in the NodeArray using the `predictPrice` function
+        float predictedPrice = predictPrice(nodeArray, nodeArray->nodes[i]->date);
+
+        if (predictedPrice == -1 || isnan(predictedPrice)) { // Check if prediction failed
+            printf("Error: Prediction failed for date %s\n", nodeArray->nodes[i]->date);
+            return NAN;  // Return NaN if prediction fails for any date
+        }
+
+        // Calculate the squared error
+        double error = nodeArray->nodes[i]->price - predictedPrice;
+        mse += error * error;
+    }
+
+    // Calculate the mean of the squared errors
+    mse /= nodeArray->size;
+
+    return mse;
 }
