@@ -1,7 +1,7 @@
 all: main
 
 main: main.o splay_tree.o plot.o
-	gcc -o main main.o splay_tree.o plot.o 
+	gcc -o main main.o splay_tree.o plot.o -lm
 
 main.o: main.c
 	gcc -c main.c
