@@ -153,7 +153,6 @@ void batchInsert(Node** root, char dates[][11], float prices[], int volume[], in
     }
 }
 
-// Recursive search function for the Splay Tree
 float recursiveSearch(Node* root, char* date) {
     if (root == NULL) {
         return NOT_FOUND_PRICE; // Base case: empty subtree
@@ -174,11 +173,15 @@ float recursiveSearch(Node* root, char* date) {
 
 float searchByDate(Node** root, char* date) {
     float price = recursiveSearch(*root, date);
-    if (price == NOT_FOUND_PRICE) {
+    if (price != NOT_FOUND_PRICE) {
+        // Splay the found node to the root
+        *root = splay(*root, date);
+    } else {
         printf("Invalid date: %s\n", date);
     }
     return price;
 }
+
 
 // Initialize a dynamic array of nodes
 void initNodeArray(NodeArray* arr, size_t initialCapacity) {
