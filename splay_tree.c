@@ -76,46 +76,61 @@ int dateToDays(char* date) {
     return totalDays;
 }
 
-// Splay operation
 Node* splay(Node* root, char* date) {
+    // Base case: if root is NULL or date matches root's date
     if (root == NULL || dateToDays(root->date) == dateToDays(date))
         return root;
 
-    // Date is smaller than root's date
+    // Left subtree cases: if the target date is smaller than root's date
     if (dateToDays(date) < dateToDays(root->date)) {
+        // If the left child is NULL, the date is not in the tree, return root
         if (root->left == NULL) return root;
 
-        // Zig-Zig (Left Left)
+        // Zig-Zig (Left Left): date is smaller than left child's date
         if (dateToDays(date) < dateToDays(root->left->date)) {
-            root->left = splay(root->left, date);
+            // Splay the target in the left-left subtree
+            root->left->left = splay(root->left->left, date);
+            // First right rotation on root
             root = rightRotate(root);
         }
-        // Zig-Zag (Left Right)
+        // Zig-Zag (Left Right): date is larger than left child's date
         else if (dateToDays(date) > dateToDays(root->left->date)) {
+            // Splay the target in the left-right subtree
             root->left->right = splay(root->left->right, date);
+            // Perform left rotation on root->left if it’s not NULL
             if (root->left->right != NULL)
                 root->left = leftRotate(root->left);
         }
 
-        return (root->left == NULL) ? root : rightRotate(root);
-    } else { // Date is greater than root's date
+        // After rotations, if left child is NULL, return root; otherwise, do a final rotation
+        return root->left == NULL ? root : rightRotate(root);
+    }
+    // Right subtree cases: if the target date is greater than root's date
+    else {
+        // If the right child is NULL, the date is not in the tree, return root
         if (root->right == NULL) return root;
 
-        // Zag-Zag (Right Right)
+        // Zag-Zag (Right Right): date is larger than right child's date
         if (dateToDays(date) > dateToDays(root->right->date)) {
-            root->right = splay(root->right, date);
+            // Splay the target in the right-right subtree
+            root->right->right = splay(root->right->right, date);
+            // First left rotation on root
             root = leftRotate(root);
         }
-        // Zag-Zig (Right Left)
+        // Zag-Zig (Right Left): date is smaller than right child's date
         else if (dateToDays(date) < dateToDays(root->right->date)) {
+            // Splay the target in the right-left subtree
             root->right->left = splay(root->right->left, date);
+            // Perform right rotation on root->right if it’s not NULL
             if (root->right->left != NULL)
                 root->right = rightRotate(root->right);
         }
 
-        return (root->right == NULL) ? root : leftRotate(root);
+        // After rotations, if right child is NULL, return root; otherwise, do a final rotation
+        return root->right == NULL ? root : leftRotate(root);
     }
 }
+
 
 // Insert a new node
 Node* insert(Node* root, char* date, float price, int volume) {
@@ -171,6 +186,7 @@ float recursiveSearch(Node* root, char* date) {
     return price;
 }
 
+
 float searchByDate(Node** root, char* date) {
     float price = recursiveSearch(*root, date);
     if (price != NOT_FOUND_PRICE) {
@@ -181,7 +197,6 @@ float searchByDate(Node** root, char* date) {
     }
     return price;
 }
-
 
 // Initialize a dynamic array of nodes
 void initNodeArray(NodeArray* arr, size_t initialCapacity) {
@@ -217,10 +232,13 @@ void inOrder(Node* root, NodeArray* arr) {
         }
 
         arr->nodes[arr->size++] = root;
+        //inOrder(root->left, arr);
 
         inOrder(root->right, arr);
     }
 }
+
+
 
 // Print all nodes in the NodeArray
 void printNodes(const NodeArray* arr) {
