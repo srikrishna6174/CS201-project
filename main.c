@@ -216,6 +216,5 @@ int main() {
 
     fclose(file); // Close the file after use
     freeNodeArray(&arr); // Free memory allocated for the NodeArray
-
     return 0; // Successful program termination
 }
