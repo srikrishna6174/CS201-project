@@ -30,4 +30,5 @@ void freeNodeArray(NodeArray* arr);
 void inOrder(Node* root, NodeArray* arr);
 float predictPrice(NodeArray* nodeArray, char* futureDate);
 double calculateMSE(NodeArray* nodeArray);
+
 #endif
